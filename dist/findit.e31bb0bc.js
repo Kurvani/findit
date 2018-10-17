@@ -104,7 +104,37 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"index.js":[function(require,module,exports) {
+})({"redditapi.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _default = {
+  search: function search(searchTerm, searchLimit, sortBy) {
+    //This is where we're goign to make our request. ?q= is to query
+    return fetch( //fetch returns a promise
+    "http://www.reddit.com/search.json?q=".concat(searchTerm, "&sort]").concat(sortBy, "&limit=").concat(searchLimit)).then(function (res) {
+      return res.json();
+    }) // with the fetch api we'll do a .then to get the dresponse and then say we want that response in .json //Then we do another .then to give us the data
+    .then(function (data) {
+      return data.data.children.map(function (data) {
+        return data.data;
+      });
+    }).catch(function (err) {
+      return console.log(err);
+    }); //Put a catch error function at the end just in case. TODO: are lines 6-10 essentially just one giant line of code separated for the sake of readability? FIND OUT!
+  }
+};
+exports.default = _default;
+},{}],"index.js":[function(require,module,exports) {
+"use strict";
+
+var _redditapi = _interopRequireDefault(require("./redditapi"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var searchForm = document.getElementById("search-form");
 var searchInput = document.getElementById("search-input"); //Grab the searchForm variable and add on an EventListener
 //When you have an EventListener you can pass in an event parameter as well (which we use 'e')
@@ -122,7 +152,24 @@ searchForm.addEventListener("submit", function (e) {
   if (searchTerm == "") {
     //Show message there is nothing typed in
     showMessage("Please add a search term", "alert-danger");
-  } //preventDefault to prevent the form from actaully submitting to a file
+  } // Clear input when typing in search
+
+
+  searchInput.value = ""; // Search Reddit (we imported our reddit search function that uses the Reddit API)
+
+  _redditapi.default.search(searchTerm, searchLimit, sortBy).then(function (results) {
+    var output = '<div class="card-columns">'; //We use let for our variable because we're goign to manipulate it
+    // Loop through posts
+
+    results.forEach(function (post) {
+      // Check for image. We're essentailly saying if the post has a preview image use it, otherwise use the image at the URL. The ':' means else.
+      var image = post.preview ? post.preview.images[0].source.url : "https://cdn.comparitech.com/wp-content/uploads/2017/08/reddit-1.jpg";
+      output += "\n        <div class=\"card\">\n  <img class=\"card-img-top\" src=\"".concat(image, "\" alt=\"Card image cap\">\n  <div class=\"card-body\">\n    <h5 class=\"card-title\">").concat(post.title, "</h5>\n    <p class=\"card-text\">").concat(truncateText(post.selftext, 100), "</p>\n    <a href=\"").concat(post.url, "\" target=\"_blank\" class=\"btn btn-primary\">Read More</a>\n    <hr>\n    <span class=\"badge badge-secondary\">Subreddit: ").concat(post.subreddit, "</span>\n    <span class=\"badge badge-dark\">Upvotes: ").concat(post.score, "</span>\n    </div>\n</div>\n        ");
+    });
+    output += "</div>"; //Append the ending div to our output
+
+    document.getElementById("results").innerHTML = output;
+  }); //preventDefault to prevent the form from actaully submitting to a file
 
 
   e.preventDefault();
@@ -152,8 +199,15 @@ function showMessage(message, className) {
   setTimeout(function () {
     return document.querySelector(".alert").remove();
   }, 3000);
+} // Truncate Text
+
+
+function truncateText(text, limit) {
+  var shortened = text.indexOf(" ", limit);
+  if (shortened == -1) return text;
+  return text.substring(0, shortened);
 }
-},{}],"C:/Users/KuroshSV/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./redditapi":"redditapi.js"}],"C:/Users/KuroshSV/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
